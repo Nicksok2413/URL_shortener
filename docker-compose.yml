@@ -1,0 +1,29 @@
+services:
+  # Сервис БД
+  db:
+    image: postgres:18-alpine
+    container_name: url_shortener_db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-url_shortener_db}
+      POSTGRES_USER: ${DB_USER:-url_shortener_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Монтируем том для БД
+    healthcheck:
+      # Проверяет, готова ли БД принимать соединения (экранируем $ для shell)
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s  # Даем время на запуск Postgres перед первой проверкой
+    restart: unless-stopped
+    networks:
+      - backend
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  backend:
+    driver: bridge

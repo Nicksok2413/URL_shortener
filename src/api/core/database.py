@@ -1,0 +1,137 @@
+"""Настройка подключения к БД."""
+
+from contextlib import asynccontextmanager
+from typing import Any, AsyncGenerator
+
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
+
+from src.api.core.config import settings
+
+
+class Database:
+    """
+    Менеджер подключений к базе данных.
+
+    Отвечает за:
+    - Инициализацию подключения
+    - Управление пулом соединений
+    - Создание сессий
+    """
+
+    def __init__(self) -> None:
+        """Инициализирует менеджер с пустыми подключениями."""
+
+        self.engine: AsyncEngine | None = None
+        self.session_factory: async_sessionmaker[AsyncSession] | None = None
+
+    async def _verify_connection(self) -> None:
+        """
+        Вспомогательный метод.
+        Проверяет работоспособность подключения к БД.
+
+        Raises:
+            RuntimeError: Если проверка подключения не удалась.
+        """
+
+        if not self.session_factory:
+            raise RuntimeError("Фабрика сессий не инициализирована.")
+
+        try:
+            async with self.session_factory() as session:
+                # Выполняем простой и быстрый запрос к БД для проверки соединения
+                await session.execute(text("SELECT 1"))
+            print("✅ Проверка подключения к БД прошла успешно.")
+        except Exception as exc:
+            print(f"❌ Ошибка подключения к БД: {exc}")
+            raise RuntimeError("Не удалось проверить подключение к БД.") from exc
+
+    async def connect(self, **kwargs: Any) -> None:
+        """
+        Устанавливает подключение к БД.
+        Использует `DB_URL` из настроек.
+
+        Args:
+            **kwargs: Дополнительные параметры для create_async_engine.
+
+        Raises:
+            RuntimeError: При неудачной проверке подключения.
+        """
+
+        self.engine = create_async_engine(
+            url=str(settings.DB_URL),
+            echo=settings.DEBUG,  # Включаем логирование SQL запросов в DEBUG-режиме
+            pool_pre_ping=True,  # Проверять соединение перед использованием
+            pool_recycle=3600,  # Переподключение каждый час
+            **kwargs,
+        )
+
+        self.session_factory = async_sessionmaker(
+            bind=self.engine,
+            class_=AsyncSession,
+            expire_on_commit=False,  # Отключаем "протухание", чтобы атрибуты объектов были доступны после коммита
+            autocommit=False,  # Управляем транзакциями явно
+            autoflush=False,  # Управляем flush явно
+        )
+
+        # Проверяем работоспособность подключения к БД
+        await self._verify_connection()
+        print("Подключение к БД установлено.")
+
+    async def disconnect(self) -> None:
+        """Корректное закрытие подключения к БД."""
+
+        if self.engine:
+            print("Закрытие подключения к БД...")
+            await self.engine.dispose()
+            self.engine = None
+            self.session_factory = None
+            print("Подключение к БД успешно закрыто.")
+
+    @asynccontextmanager
+    async def session(self) -> AsyncGenerator[AsyncSession, None]:
+        """
+        Асинхронный контекстный менеджер для работы с сессиями БД.
+
+        Yields:
+            AsyncSession: Экземпляр сессии БД.
+
+        Raises:
+            RuntimeError: При вызове до инициализации подключения (`db.connect`).
+        """
+
+        if not self.session_factory:
+            raise RuntimeError("БД не инициализирована. Вызовите `await db.connect()` перед использованием сессий.")
+
+        session: AsyncSession = self.session_factory()
+
+        try:
+            yield session
+        except Exception as exc:
+            print(f"Выполняется откат. Ошибка во время сессии БД: {exc}")
+            await session.rollback()
+            raise
+        finally:
+            await session.close()
+
+
+# Глобальный экземпляр менеджера БД
+db = Database()
+
+
+# Зависимость для FastAPI
+async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
+    """
+    Зависимость FastAPI для получения асинхронной сессии БД.
+
+    Yields:
+        AsyncSession: Сессия БД, управляемая через `db.session()`.
+    """
+
+    async with db.session() as session:
+        yield session

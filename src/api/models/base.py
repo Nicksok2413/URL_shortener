@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, MetaData, func
+from sqlalchemy import BigInteger, DateTime, MetaData, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, declared_attr, mapped_column
 
 # Соглашение об именовании для внешних ключей и индексов (для Alembic и SQLAlchemy)
@@ -75,7 +75,7 @@ class Base(DeclarativeBase, TimestampMixin):
 
     # Общий первичный ключ для большинства моделей
     # Если у какой-то модели будет другой ПК, его нужно будет объявить там явно
-    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, index=True)
 
     def __repr__(self) -> str:
         """
@@ -83,6 +83,6 @@ class Base(DeclarativeBase, TimestampMixin):
 
         Включает имя класса и значение первичного ключа 'id'.
         Если модель имеет другой первичный ключ, этот метод нужно переопределить.
-        Пример: <User(id=1)>.
+        Пример: <UrlLink(id=1)>.
         """
         return f"<{self.__class__.__name__}(id={self.id!r})>"

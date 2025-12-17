@@ -16,6 +16,7 @@ from sqlalchemy import text
 from src.api.core.config import settings
 from src.api.core.database import db
 from src.api.core.dependencies import DBSession
+from src.api.core.logging import log
 
 
 # Определяем lifespan для управления подключением к БД
@@ -28,19 +29,20 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     Args:
         app (FastAPI): Экземпляр приложения FastAPI.
     """
-    print("Инициализация приложения...")
+    log.info("Инициализация приложения...")
+
     try:
         await db.connect()
         yield
     except Exception as exc:
         # Логируем критическую ошибку, если подключение к БД не удалось при старте
-        print(f"Критическая ошибка при старте приложения: {exc}")
+        log.critical(f"Критическая ошибка при старте приложения: {exc}", exc_info=True)
         # Повторно вызываем исключение, чтобы приложение не запустилось в нерабочем состоянии
         raise exc
     finally:
-        print("Остановка приложения...")
+        log.info("Остановка приложения...")
         await db.disconnect()
-        print("Приложение остановлено.")
+        log.info("Приложение остановлено.")
 
 
 # Создаем экземпляр FastAPI
@@ -51,8 +53,8 @@ def create_app() -> FastAPI:
     Returns:
         FastAPI: Сконфигурированный экземпляр приложения.
     """
-    print(f"Создание экземпляра FastAPI для '{settings.PROJECT_NAME} {settings.API_VERSION}'")
-    print(f"Режим разработки/тестирования: {settings.DEBUG}.")
+    log.info(f"Создание экземпляра FastAPI для '{settings.PROJECT_NAME} {settings.API_VERSION}'")
+    log.info(f"Режим разработки/тестирования: {settings.DEBUG}.")
 
     app = FastAPI(
         title=settings.PROJECT_NAME,
@@ -62,7 +64,7 @@ def create_app() -> FastAPI:
         description="API для сервиса сокращения ссылок",
     )
 
-    print(f"Приложение '{settings.PROJECT_NAME} {settings.API_VERSION}' сконфигурировано и готово к запуску.")
+    log.info(f"Приложение '{settings.PROJECT_NAME} {settings.API_VERSION}' сконфигурировано и готово к запуску.")
     return app
 
 
@@ -110,6 +112,6 @@ async def health_check(
     # Если БД недоступна, меняем HTTP статус ответа на 503 Service Unavailable
     if not is_db_ok:
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
-        print("Health check провален: нет подключения к БД.")
+        log.warning("Health check провален: нет подключения к БД.")
 
     return response_body

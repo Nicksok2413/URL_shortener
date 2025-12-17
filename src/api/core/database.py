@@ -11,8 +11,8 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from src.api.core.config import settings
-from src.api.core.logging import log
+from .config import settings
+from .logging import log
 
 
 class Database:

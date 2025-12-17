@@ -6,7 +6,7 @@ import sys
 from loguru import logger
 from pydantic import BaseModel, Field
 
-from src.api.core.config import settings
+from .config import settings
 
 
 class LogConfig(BaseModel):

@@ -5,7 +5,7 @@ from typing import Annotated
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.core.database import get_db_session
+from .database import get_db_session
 
 # --- Типизация для инъекции сессии базы данных ---
 

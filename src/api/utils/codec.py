@@ -1,6 +1,5 @@
 """Модуль для кодирования целого числа в строку Base62"""
 
-
 BASE = 62
 CHARSET = "23456789abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ"
 CHARSET_MAP = {char: index for index, char in enumerate(CHARSET)}
@@ -54,7 +53,7 @@ def decode_base62(encoded_str: str) -> int:
     for index, char in enumerate(encoded_str):
         pow_value = len(encoded_str) - (index + 1)
         position = CHARSET_MAP[char]
-        number += position * (BASE ** pow_value)
+        number += position * (BASE**pow_value)
 
     return number
 

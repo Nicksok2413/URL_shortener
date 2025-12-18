@@ -27,7 +27,6 @@ def generate_short_code(length: int = 6) -> str:
 
 
 if __name__ == "__main__":
-
     short_code = generate_short_code()
     print(f"Шорт код: {short_code}")
 

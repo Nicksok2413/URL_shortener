@@ -8,6 +8,7 @@ from src.api.schemas import UrlLinkCreate
 
 from .base_repository import BaseRepository
 
+
 class UrlLinkRepository(BaseRepository[UrlLink, UrlLinkCreate, None]):
     """
     Репозиторий для выполнения CRUD-операций с моделью UrlLink.
@@ -27,7 +28,7 @@ class UrlLinkRepository(BaseRepository[UrlLink, UrlLinkCreate, None]):
             UrlLink | None: Экземпляр модели UrlLink или None, если запись не найдена.
         """
         log.debug(f"Получение объекта ссылки по шорт коду: {short_code}")
-        url = self.get_by_filter(db_session,self.model.short_code == short_code)
+        url = self.get_by_filter(db_session, self.model.short_code == short_code)
 
         status = f"найден (ID: {url.id})" if url else "не найден"
         log.debug(f"Объект ссылки по шорт коду ({short_code}) {status}.")

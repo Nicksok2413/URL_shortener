@@ -3,11 +3,9 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.core.exceptions import NotFoundException
-from src.api.core.logging import log
 from src.api.models import UrlLink
 from src.api.repositories import UrlLinkRepository
 from src.api.schemas import UrlLinkCreate
-from src.api.utils import generate_short_code
 
 from .base_service import BaseService
 

@@ -95,7 +95,3 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 
         # Возвращаем созданный объект
         return db_obj
-
-
-
-

@@ -13,5 +13,6 @@ class UrlLinkCreate(BaseSchema):
 
 class UrlLinkResponse(BaseSchema):
     """"""
+
     short_code: str = Field(..., description="")
     original_url: HttpUrl = Field(..., description="")

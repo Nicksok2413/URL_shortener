@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.models import UrlLink
 
-from .base_repository import BaseRepository, ModelType
+from .base_repository import BaseRepository
 
 
 class UrlLinkRepository(BaseRepository[UrlLink, None, None]):
@@ -23,10 +23,10 @@ class UrlLinkRepository(BaseRepository[UrlLink, None, None]):
            new_link_data (dict[str, str]): Словарь с данными для создания нового объекта ссылки.
 
        Returns:
-           ModelType: Созданный экземпляр ссылки.
+           UrlLink: Созданный экземпляр ссылки.
        """
         # Подготавливаем объект
-        new_link = UrlLink(**new_link_data)
+        new_link = self.model(**new_link_data)
 
         # Добавляем объект в сессию
         db_session.add(new_link)

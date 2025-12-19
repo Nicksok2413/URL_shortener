@@ -31,7 +31,7 @@ class LogConfig(BaseModel):
     )
 
 
-def configure_logging():
+def configure_logging() -> None:
     """
     Настраивает Loguru для приложения.
 

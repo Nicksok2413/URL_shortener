@@ -1,5 +1,6 @@
 """Репозиторий для работы с моделью UrlLink."""
 
+from pydantic import BaseModel
 from sqlalchemy import ColumnElement, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -8,23 +9,24 @@ from src.api.models import UrlLink
 from .base_repository import BaseRepository
 
 
-class UrlLinkRepository(BaseRepository[UrlLink, None, None]):
+class UrlLinkRepository(BaseRepository[UrlLink, BaseModel, BaseModel]):  # Используем BaseModel как тип-заглушку
     """
     Репозиторий для выполнения CRUD-операций с моделью UrlLink.
 
     Наследует общие методы от BaseRepository и содержит специфичные для UrlLink методы.
     """
+
     async def create(self, db_session: AsyncSession, *, new_link_data: dict[str, str]) -> UrlLink:
         """
-       Создает и добавляет новый объект ссылки в сессию.
+        Создает и добавляет новый объект ссылки в сессию.
 
-       Args:
-           db_session (AsyncSession): Асинхронная сессия базы данных.
-           new_link_data (dict[str, str]): Словарь с данными для создания нового объекта ссылки.
+        Args:
+            db_session (AsyncSession): Асинхронная сессия базы данных.
+            new_link_data (dict[str, str]): Словарь с данными для создания нового объекта ссылки.
 
-       Returns:
-           UrlLink: Созданный экземпляр ссылки.
-       """
+        Returns:
+            UrlLink: Созданный экземпляр ссылки.
+        """
         # Подготавливаем объект
         new_link = self.model(**new_link_data)
 

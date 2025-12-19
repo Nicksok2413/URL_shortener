@@ -1,8 +1,9 @@
 from .base_schema import BaseSchema
-from .urllink_schema import UrlLinkCreate, UrlLinkResponse
+from .urllink_schema import UrlLinkBaseSchema, UrlLinkCreateSchema, UrlLinkResponseSchema
 
 __all__ = [
     "BaseSchema",
-    "UrlLinkCreate",
-    "UrlLinkResponse",
+    "UrlLinkBaseSchema",
+    "UrlLinkCreateSchema",
+    "UrlLinkResponseSchema",
 ]

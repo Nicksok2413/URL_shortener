@@ -16,7 +16,9 @@ from sqlalchemy import text
 from src.api.core.config import settings
 from src.api.core.database import db
 from src.api.core.dependencies import DBSession
+from src.api.core.exceptions import setup_exception_handlers
 from src.api.core.logging import log
+from src.api.routes import api_router
 
 
 # Определяем lifespan для управления подключением к БД
@@ -63,6 +65,14 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
         description="API для сервиса сокращения ссылок",
     )
+
+    # Настраиваем кастомные обработчики исключений
+    setup_exception_handlers(app)
+    log.info("Обработчики исключений настроены.")
+
+    # Подключаем API роутер с префиксом /api
+    log.info("Подключение API роутера...")
+    app.include_router(api_router, prefix="/api")
 
     log.info(f"Приложение '{settings.PROJECT_NAME} {settings.API_VERSION}' сконфигурировано и готово к запуску.")
     return app

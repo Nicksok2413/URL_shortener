@@ -24,25 +24,3 @@ def generate_short_code(length: int = 6) -> str:
     generated_short_code = "".join(choice(CHARSET) for _ in range(length))
 
     return generated_short_code
-
-
-if __name__ == "__main__":
-    short_code = generate_short_code()
-    print(f"Шорт код: {short_code}")
-
-    # Проверка ошибок
-    try:
-        generate_short_code(length=0)
-    except ValueError as exc:
-        print(f"Ошибка: {exc}")
-
-    try:
-        generate_short_code(length=-1)
-    except ValueError as exc:
-        print(f"Ошибка: {exc}")
-
-    # Проверка ошибок
-    try:
-        generate_short_code(length="abc")
-    except TypeError as exc:
-        print(f"Ошибка: {exc}")

@@ -1,55 +1,67 @@
 """Репозиторий для работы с моделью UrlLink."""
 
+from sqlalchemy import ColumnElement, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.core.logging import log
 from src.api.models import UrlLink
-from src.api.schemas import UrlLinkCreate
 
-from .base_repository import BaseRepository
+from .base_repository import BaseRepository, ModelType
 
 
-class UrlLinkRepository(BaseRepository[UrlLink, UrlLinkCreate, None]):
+class UrlLinkRepository(BaseRepository[UrlLink, None, None]):
     """
     Репозиторий для выполнения CRUD-операций с моделью UrlLink.
 
     Наследует общие методы от BaseRepository и содержит специфичные для UrlLink методы.
     """
-
-    async def get_by_code(self, db_session: AsyncSession, *, short_code: str) -> UrlLink | None:
+    async def create(self, db_session: AsyncSession, *, new_link_data: dict[str, str]) -> UrlLink:
         """
-        Получает объект ссылки по шорт коду.
+       Создает и добавляет новый объект ссылки в сессию.
+
+       Args:
+           db_session (AsyncSession): Асинхронная сессия базы данных.
+           new_link_data (dict[str, str]): Словарь с данными для создания нового объекта ссылки.
+
+       Returns:
+           ModelType: Созданный экземпляр ссылки.
+       """
+        # Подготавливаем объект
+        new_link = UrlLink(**new_link_data)
+
+        # Добавляем объект в сессию
+        db_session.add(new_link)
+
+        # Получаем ID и другие сгенерированные базой данных значения
+        await db_session.flush()
+
+        # Обновляем объект из базы данных
+        await db_session.refresh(new_link)
+
+        # Возвращаем созданный объект
+        return new_link
+
+    async def get_by_filter(self, db_session: AsyncSession, *filters: ColumnElement[bool]) -> UrlLink | None:
+        """
+        Получает первую запись, соответствующую заданным критериям фильтрации, или None.
+
+        Критерии должны быть выражениями SQLAlchemy (например, self.model.name == "John").
 
         Args:
             db_session (AsyncSession): Асинхронная сессия базы данных.
-            short_code (str): Шорт код (случайно сгенерированная строка).
+            *filters (ColumnElement[bool]): Один или несколько критериев фильтрации SQLAlchemy.
+                                            Они будут объединены через AND.
 
         Returns:
-            UrlLink | None: Экземпляр модели UrlLink или None, если запись не найдена.
+            UrlLink | None: Экземпляр модели или None, если запись не найдена.
         """
-        log.debug(f"Получение объекта ссылки по шорт коду: {short_code}")
-        url = self.get_by_filter(db_session, self.model.short_code == short_code)
+        statement = select(self.model)
 
-        status = f"найден (ID: {url.id})" if url else "не найден"
-        log.debug(f"Объект ссылки по шорт коду ({short_code}) {status}.")
+        if filters:
+            statement = statement.where(*filters)
 
-        return url
+        # Явное ограничение остановки поиска после первого совпадения
+        statement = statement.limit(1)
 
-    async def get_by_original_url(self, db_session: AsyncSession, *, url: str) -> UrlLink | None:
-        """
-        Получает объект ссылки по оригинальной пользовательской ссылке.
+        result = await db_session.execute(statement)
 
-        Args:
-            db_session (AsyncSession): Асинхронная сессия базы данных.
-            url (str): Оригинальная пользовательская ссылка.
-
-        Returns:
-            UrlLink | None: Экземпляр модели UrlLink или None, если запись не найдена.
-        """
-        log.debug(f"Получение объекта ссылки по оригинальной ссылке: {url}")
-        url = self.get_by_filter(db_session, self.model.original_url == url)
-
-        status = f"найден (ID: {url.id})" if url else "не найден"
-        log.debug(f"Объект ссылки по оригинальной ссылке ({url}) {status}.")
-
-        return url
+        return result.scalar_one_or_none()

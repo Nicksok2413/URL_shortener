@@ -1,21 +1,17 @@
 """Модель для формирования полного URL из шорт кода."""
 
-from fastapi import Request
+from src.api.core.config import settings
 
 
-def format_short_url(short_code: str, request: Request) -> str:
+def format_short_url(short_code: str) -> str:
     """
     Формирует полный URL из short_code.
-    Использует base_url из запроса.
 
     Args:
         short_code (str): Шорт код (случайно сгенерированная строка).
-        request (Request): Объект запроса.
 
     Returns:
         str: Полный URL с использованием шорт кода.
     """
-    base_url = str(request.base_url).rstrip("/")
-    full_url = f"{base_url}/{short_code}"
-
+    full_url = f"http://{settings.API_HOST}:{settings.API_PORT}/{short_code}"  # Изменить логику для реального домена и httpx
     return full_url

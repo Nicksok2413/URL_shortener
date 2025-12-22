@@ -1,6 +1,6 @@
 """Эндпоинты для управления ссылками (UrlLinks)."""
 
-from fastapi import APIRouter, Request, status
+from fastapi import APIRouter, status
 
 from src.api.core.dependencies import DBSession, UrlLinkSvc
 from src.api.core.exceptions import ConflictException
@@ -19,7 +19,6 @@ router = APIRouter(prefix="/urls", tags=["URLs"])
 )
 async def create_link(
     db_session: DBSession,
-    request: Request,
     urllink_service: UrlLinkSvc,
     data_in: UrlLinkCreateSchema,
 ) -> UrlLinkResponseSchema:
@@ -28,7 +27,6 @@ async def create_link(
 
     Args:
         db_session: Асинхронная сессия базы данных.
-        request: Объект запроса.
         urllink_service: Сервис для работы со ссылками.
         data_in: Данные для создания ссылки (оригинальный URL пользователя).
 
@@ -51,5 +49,5 @@ async def create_link(
     return UrlLinkResponseSchema(
         short_code=new_link.short_code,
         original_url=new_link.original_url,
-        short_url=format_short_url(new_link.short_code, request),
+        short_url=format_short_url(new_link.short_code),
     )

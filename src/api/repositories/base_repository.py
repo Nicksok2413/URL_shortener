@@ -3,6 +3,8 @@
 from typing import Generic, TypeVar
 
 from pydantic import BaseModel
+from sqlalchemy import ColumnElement, exists, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.models import Base as SQLAlchemyBaseModel
 
@@ -31,3 +33,24 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             model (ModelType): Класс модели SQLAlchemy.
         """
         self.model = model
+
+    async def is_exists(self, db_session: AsyncSession, *filters: ColumnElement[bool]) -> bool:
+        """
+        Проверяет существование записи в базе данных по заданным критериям фильтрации.
+
+        Критерии должны быть выражениями SQLAlchemy (например, self.model.name == "John").
+
+        Args:
+            db_session (AsyncSession): Асинхронная сессия базы данных.
+            *filters (ColumnElement[bool]): Один или несколько критериев фильтрации SQLAlchemy.
+                                            Они будут объединены через AND.
+
+        Returns:
+            bool: True - запись существует, False - нет
+        """
+        statement = select(exists().where(*filters))
+
+        result = await db_session.execute(statement)
+
+        # Оборачиваем в bool, чтобы mypy не ругался (сигнатура scalar -> Any | None)
+        return bool(result.scalar())

@@ -3,7 +3,6 @@
 from fastapi import APIRouter, status
 
 from src.api.core.dependencies import DBSession, UrlLinkSvc
-from src.api.core.exceptions import ConflictException
 from src.api.schemas import UrlLinkCreateSchema, UrlLinkResponseSchema
 from src.api.utils import format_short_url
 
@@ -38,13 +37,6 @@ async def create_link(
     """
     # Создаем новый объект ссылки
     new_link = await urllink_service.create(db_session, url=data_in.url)
-
-    # Если сервис вернул None, выбрасываем исключение
-    if not new_link:
-        raise ConflictException(
-            error_type="urllink_conflict",
-            message="Ссылка с таким шорт кодом существует в базе данных.",
-        )  # Можно выбросить IntegrityError вместо кастомной ошибки
 
     return UrlLinkResponseSchema(
         short_code=new_link.short_code,

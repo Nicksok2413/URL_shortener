@@ -1,6 +1,7 @@
 """Эндпоинты для управления ссылками (UrlLinks)."""
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, BackgroundTasks, status
+from starlette.responses import RedirectResponse
 
 from src.api.core.dependencies import DBSession, UrlLinkSvc
 from src.api.schemas import UrlLinkCreateSchema, UrlLinkResponseSchema
@@ -43,3 +44,39 @@ async def create_link(
         original_url=new_link.original_url,
         short_url=format_short_url(new_link.short_code),
     )
+
+
+@router.get(
+    "/{short_code}",
+    status_code=status.HTTP_307_TEMPORARY_REDIRECT,
+    summary="Редирект по короткой ссылке на оригинальный URL",
+    description="Находит объект ссылки по шорт коду и перенаправляет на оригинальный URL",
+)
+async def get_link(
+    short_code: str,
+    db_session: DBSession,
+    urllink_service: UrlLinkSvc,
+    background_tasks: BackgroundTasks,
+) -> RedirectResponse:
+    """
+    Находит объект ссылки по шорт коду и перенаправляет на оригинальный URL.
+
+    Args:
+        short_code: Шорт код ссылки из URL пути.
+        db_session: Асинхронная сессия базы данных.
+        urllink_service: Сервис для работы со ссылками.
+
+    Returns:
+        RedirectResponse: Ответ перенаправления на оригинальный URL.
+
+    Raises:
+        NotFoundException: Если ссылка не найдена.
+    """
+
+    # Проверка существования объекта ссылки
+    link = await urllink_service.get_by_code(db_session, short_code=short_code)
+
+    # Фоном увеличиваем счетчик переходов по ссылке через BackgroundTasks
+    background_tasks.add_task(urllink_service.perform_click_increment, short_code)
+
+    return RedirectResponse(link.original_url)

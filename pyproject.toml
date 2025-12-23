@@ -15,7 +15,8 @@ dependencies = [
     "pydantic-settings (>=2.12.0,<3.0.0)",
     "psycopg[binary] (>=3.3.2,<4.0.0)",
     "sqlalchemy (>=2.0.45,<3.0.0)",
-    "loguru (>=0.7.3,<0.8.0)"
+    "alembic (>=1.17.2,<2.0.0)",
+    "loguru (>=0.7.3,<0.8.0)",
 ]
 
 
@@ -26,11 +27,24 @@ build-backend = "poetry.core.masonry.api"
 [dependency-groups]
 dev = [
     "ruff (>=0.14.9,<0.15.0)",
-    "mypy (>=1.19.1,<2.0.0)"
+    "mypy (>=1.19.1,<2.0.0)",
+    "pytest (>=9.0.2,<10.0.0)",
+    "pytest-docker (>=3.2.5,<4.0.0)",
+    "pytest-asyncio (>=1.3.0,<2.0.0)",
+    "pytest-env (>=1.2.0,<2.0.0)"
 ]
 
 [tool.poetry]
 package-mode = false
+
+
+# =================================================================
+# Конфигурация Alembic
+# =================================================================
+[tool.alembic]
+# Путь к директории с миграциями
+script_location = "migrations"
+prepend_sys_path = ["."]
 
 
 # =================================================================
@@ -88,6 +102,11 @@ exclude = [
     "F401",  # Разрешаем импортировать модуль, но не использовать его явно в этом файле
 ]
 
+# Файл env.py (alembic)
+"migrations/env.py" = [
+    "F401",  # Разрешаем импортировать модуль, но не использовать его явно в этом файле
+]
+
 # Разрешаем вызов функций в аргументах (Depends, Security) для FastAPI
 "src/api/core/dependencies.py" = ["B008"]
 "src/api/routes/**/*.py" = ["B008"]
@@ -125,4 +144,42 @@ exclude = [
     "migrations/",
     "tests/",
     "docker/"
+]
+
+
+# =================================================================
+# Конфигурация Pytest
+# =================================================================
+[tool.pytest.ini_options]
+# Указываем корень проекта для поиска импортов
+pythonpath = ["."]
+
+# Настройки для pytest-asyncio
+
+# auto - автоматически помечает async функции как тесты
+asyncio_mode = "auto"
+
+# Указываем, где искать фикстуру event_loop (scope session)
+asyncio_default_fixture_loop_scope = "session"
+
+# Игнорируем предупреждения о deprecation (опционально, чтобы вывод был чище)
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning"
+]
+
+# Настройки pytest-env
+
+# Эти переменные будут установлены до запуска тестов и до импорта config.py
+# Это гарантирует, что Pydantic Settings подхватит именно их
+env = [
+    # Включаем режим разработки/тестирования
+    "DEBUG=True",
+
+    # Подключение к тестовой базе данных (которую поднимет pytest-docker на порту 5433)
+    "DB_HOST=localhost",
+    "DB_PORT=5433",
+    "DB_NAME=test_db",
+    "DB_USER=test_user",
+    "DB_PASSWORD=test_password",
 ]

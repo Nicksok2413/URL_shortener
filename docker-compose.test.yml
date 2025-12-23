@@ -2,7 +2,7 @@ services:
   # Изолированный сервис Базы данных для тестов
   test-db:
     image: postgres:18-alpine
-    container_name: habit_tracker_test_db_isolated
+    container_name: url_shortener_test_db_isolated
     environment:
       # Используем отдельные переменные для тестов
       POSTGRES_DB: test_db

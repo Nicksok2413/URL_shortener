@@ -36,8 +36,13 @@ class Settings(BaseSettings):
     )
     DB_PORT: int = Field(default=5432, description="Порт хоста базы данных")
 
-    # Настройки режима разработки/тестирования (по умолчанию `False` для продакшен )
+    # Настройки режима разработки/тестирования (по умолчанию `False` для продакшен)
     DEBUG: bool = Field(default=False, description="Режим разработки/тестирования")
+
+    # Настройки логирования
+    LOG_LEVEL: str = Field(default="INFO", description="Уровень логирования")
+    LOG_ROTATION: str = Field(default="10 MB", description="Размер файла логов в мегабайтах")
+    LOG_RETENTION: str = Field(default="7 days", description="Количество файлов логов")
 
     # --- Вычисляемые поля ---
 
@@ -56,7 +61,7 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(
         env_file=".env",
-        env_file_encoding="urf-8",
+        env_file_encoding="utf-8",
         case_sensitive=False,  # Имена переменных окружения не чувствительны к регистру
         extra="ignore",  # Игнорировать лишние переменные .env
     )

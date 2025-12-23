@@ -1,7 +1,7 @@
 # Makefile - Единая точка входа для управления проектом
 
 # .PHONY гарантирует, что make не будет путать эти команды с именами файлов
-.PHONY: help install up down rebuild prune logs lint format types check
+.PHONY: help install up down rebuild prune logs lint format types check migrate revision
 
 # Команда по умолчанию, которая будет вызвана при запуске `make`
 default: help
@@ -26,7 +26,10 @@ help:
 	@echo "  format         - Отформатировать код форматтером Ruff"
 	@echo "  types          - Проверить статическую типизацию mypy"
 	@echo "  check          - Запустить статический анализ (lint, format-check, types) последовательно"
-
+	@echo ""
+	@echo "Управление миграциями базы данных:"
+	@echo "  migrate        - Применить миграции Alembic"
+	@echo "  revision       - Создать новый файл миграции Alembic. Пример: make revision m=\"Add user table\""
 
 # ------------------------------------------------------------------------------
 # Установка зависимостей
@@ -92,3 +95,26 @@ types:
 
 check: lint format-check types
 	@echo "-> Статический анализ (lint, format, types) успешно пройден!"
+
+# ------------------------------------------------------------------------------
+# Управление миграциями БД
+# ------------------------------------------------------------------------------
+migrate:
+	@echo "-> Применение миграций Alembic..."
+	# Запускаем временный контейнер api-migrate
+	docker compose run --rm api-migrate
+	@echo "-> Миграции успешно применены."
+
+revision:
+	# Проверяем, что передано сообщение для миграции
+	@if [ -z "$(m)" ]; then \
+		echo "Ошибка: необходимо указать сообщение для миграции. Пример: make revision m=\"Your message\""; \
+		exit 1; \
+	fi
+
+	@echo "-> Создание новой миграции..."
+	docker compose run --rm api-migrate python -m alembic -c pyproject.toml revision --autogenerate -m "$(m)"
+	@echo "-> Миграция успешно создана."
+	@echo "-> Форматирование новой миграции..."
+	make format
+	@echo "-> Готово."

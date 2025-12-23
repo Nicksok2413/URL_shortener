@@ -11,7 +11,8 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from src.api.core.config import settings
+from .config import settings
+from .logging import log
 
 
 class Database:
@@ -46,9 +47,9 @@ class Database:
             async with self.session_factory() as session:
                 # Выполняем простой и быстрый запрос к БД для проверки соединения
                 await session.execute(text("SELECT 1"))
-            print("✅ Проверка подключения к БД прошла успешно.")
+            log.debug("✅ Проверка подключения к БД прошла успешно.")
         except Exception as exc:
-            print(f"❌ Ошибка подключения к БД: {exc}")
+            log.critical(f"❌ Ошибка подключения к БД: {exc}", exc_info=True)
             raise RuntimeError("Не удалось проверить подключение к БД.") from exc
 
     async def connect(self, **kwargs: Any) -> None:
@@ -81,17 +82,17 @@ class Database:
 
         # Проверяем работоспособность подключения к БД
         await self._verify_connection()
-        print("Подключение к БД установлено.")
+        log.success("Подключение к БД установлено.")
 
     async def disconnect(self) -> None:
         """Корректное закрытие подключения к БД."""
 
         if self.engine:
-            print("Закрытие подключения к БД...")
+            log.info("Закрытие подключения к БД...")
             await self.engine.dispose()
             self.engine = None
             self.session_factory = None
-            print("Подключение к БД успешно закрыто.")
+            log.info("Подключение к БД успешно закрыто.")
 
     @asynccontextmanager
     async def session(self) -> AsyncGenerator[AsyncSession, None]:
@@ -112,8 +113,8 @@ class Database:
 
         try:
             yield session
-        except Exception as exc:
-            print(f"Выполняется откат. Ошибка во время сессии БД: {exc}")
+        except Exception:
+            log.error("Ошибка во время сессии БД, выполняется откат.", exc_info=True)
             await session.rollback()
             raise
         finally:

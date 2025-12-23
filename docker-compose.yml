@@ -1,3 +1,18 @@
+# Определяем "шаблон" для API-сервисов с помощью якоря
+x-api-base: &api-base-config
+  build:
+    context: .  # Контекст сборки - корень проекта
+    dockerfile: docker/Dockerfile  # Путь к общему Dockerfile
+    target: api  # Этап №3 'api'
+  env_file: .env  # Передаем все переменные из .env в контейнер
+  volumes:
+    - api_logs:/logs  # Монтируем том для логов
+  depends_on:
+    db:
+      condition: service_healthy  # Запускаем только после того, как db станет healthy
+  networks:
+    - backend
+
 services:
   # Сервис БД
   db:
@@ -20,8 +35,34 @@ services:
     networks:
       - backend
 
+  # Сервис API
+  api:
+    <<: *api-base-config
+    container_name: url_shortener_api
+    # Команда для "продакшен" запуска (будет передана в entrypoint как "$@")
+    command: python -m uvicorn src.api.main:app --host 0.0.0.0 --port 8000
+    # Проверяет, готов ли api принимать запросы
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://0.0.0.0:8000/healthcheck" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s  # Даем время на запуск api перед первой проверкой
+    restart: unless-stopped
+
+  # Сервис миграций
+  api-migrate:
+    <<: *api-base-config
+    # Сервис запустится только если явно попросить профиль 'tools' или сам сервис
+    profiles: [ "tools" ]
+    # Команда для выполнения миграций (будет передана в entrypoint как "$@")
+    command: python -m alembic -c pyproject.toml upgrade head
+    restart: "no"
+
 volumes:
   postgres_data:
+    driver: local
+  api_logs:
     driver: local
 
 networks:

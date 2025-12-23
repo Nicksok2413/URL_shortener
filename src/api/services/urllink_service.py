@@ -3,6 +3,7 @@
 from pydantic import BaseModel, HttpUrl
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.api.core.database import db
 from src.api.core.exceptions import ConflictException, NotFoundException
 from src.api.core.logging import log
 from src.api.models import UrlLink
@@ -157,3 +158,20 @@ class UrlLinkService(
         # Логируем успех и возвращаем найденный объект ссылки
         log.debug(message)
         return url
+
+    async def perform_click_increment(self, short_code: str) -> None:
+        """
+        Фоновая задача: создает свою сессию и вызывает инкремент в репозитории.
+
+        Args:
+            short_code (str): Шорт код (случайно сгенерированная строка).
+        """
+        # Открываем абсолютно новую сессию, не связанную с HTTP запросом
+        async with db.session() as session:
+            try:
+                await self.repository.increment_click_count(session, short_code)
+                # Коммитим (бизнес-операция завершена успешно)
+                await session.commit()
+            except Exception as exc:
+                # rollback и close произойдут автоматически в контекстном менеджере db.session()
+                log.error(f"Ошибка при обновлении счетчика кликов: {exc}")

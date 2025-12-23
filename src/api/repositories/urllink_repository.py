@@ -1,7 +1,7 @@
 """Репозиторий для работы с моделью UrlLink."""
 
 from pydantic import BaseModel
-from sqlalchemy import ColumnElement, select
+from sqlalchemy import ColumnElement, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.models import UrlLink
@@ -67,3 +67,18 @@ class UrlLinkRepository(BaseRepository[UrlLink, BaseModel, BaseModel]):  # Ис�
         result = await db_session.execute(statement)
 
         return result.scalar_one_or_none()
+
+    async def increment_click_count(self, db_session: AsyncSession, short_code: str) -> None:
+        """
+        Метод инкремент.
+        Увеличивает `click_count` (счетчик переходов по ссылке) у объекта ссылки на 1.
+
+        Args:
+            db_session (AsyncSession): Асинхронная сессия базы данных.
+            short_code (str): Шорт код (случайно сгенерированная строка).
+        """
+        statement = (
+            update(self.model).where(self.model.short_code == short_code).values(click_count=self.model.click_count + 1)
+        )
+
+        await db_session.execute(statement)

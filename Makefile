@@ -1,7 +1,7 @@
 # Makefile - Единая точка входа для управления проектом
 
 # .PHONY гарантирует, что make не будет путать эти команды с именами файлов
-.PHONY: help install up down rebuild prune logs lint format types check
+.PHONY: help install up down rebuild prune logs lint format types check migrate revision
 
 # Команда по умолчанию, которая будет вызвана при запуске `make`
 default: help

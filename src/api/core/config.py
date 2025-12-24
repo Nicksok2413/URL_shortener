@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     # --- Статические настройки ---
 
     # Название приложения
-    PROJECT_NAME: str = "Habit Tracker Telegram Bot"
+    PROJECT_NAME: str = "URL Shortener"
     # Версия API
     API_VERSION: str = "0.1.0"
     # Хост API

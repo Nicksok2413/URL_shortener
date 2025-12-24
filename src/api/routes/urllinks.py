@@ -4,7 +4,7 @@ from fastapi import APIRouter, BackgroundTasks, status
 from starlette.responses import RedirectResponse
 
 from src.api.core.dependencies import DBSession, UrlLinkSvc
-from src.api.schemas import UrlLinkCreateSchema, UrlLinkResponseSchema
+from src.api.schemas import UrlLinkCreateSchema, UrlLinkDetailsResponseSchema, UrlLinkResponseSchema
 from src.api.utils import format_short_url
 
 router = APIRouter(prefix="/urls", tags=["URLs"])
@@ -80,3 +80,40 @@ async def get_link(
     background_tasks.add_task(urllink_service.perform_click_increment, short_code)
 
     return RedirectResponse(link.original_url)
+
+
+@router.get(
+    "/{short_code}/details",
+    status_code=status.HTTP_200_OK,
+    summary="Вывод детальной информации по шорт коду",
+    description="Находит объект ссылки по шорт коду и выводит детальную информацию",
+)
+async def get_link_details(
+    short_code: str,
+    db_session: DBSession,
+    urllink_service: UrlLinkSvc,
+) -> UrlLinkDetailsResponseSchema:
+    """
+    Находит объект ссылки по шорт коду и выводит детальную информацию.
+
+    Args:
+        short_code: Шорт код ссылки из URL пути.
+        db_session: Асинхронная сессия базы данных.
+        urllink_service: Сервис для работы со ссылками.
+
+    Returns:
+        UrlLinkDetailsResponseSchema: Детальная информация об объекте ссылки.
+
+    Raises:
+        NotFoundException: Если ссылка не найдена.
+    """
+
+    # Проверка существования объекта ссылки
+    link = await urllink_service.get_by_code(db_session, short_code=short_code)
+
+    return UrlLinkDetailsResponseSchema(
+        short_code=link.short_code,
+        original_url=link.original_url,
+        short_url=format_short_url(link.short_code),
+        click_count=link.click_count,
+    )

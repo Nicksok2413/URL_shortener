@@ -26,3 +26,13 @@ class UrlLinkResponseSchema(UrlLinkBaseSchema):
     """
 
     short_url: str = Field(..., description="Новая короткая ссылка")
+
+
+class UrlLinkDetailsResponseSchema(UrlLinkResponseSchema):
+    """
+    Схема ответа пользователю с детальной информацией.
+
+    Наследует поля от схемы UrlLinkResponseSchema.
+    """
+
+    click_count: int = Field(..., description="Счётчик переходов по ссылке")

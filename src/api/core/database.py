@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from .config import settings
-from .logging import log
+from .logging import api_log as log
 
 
 class Database:

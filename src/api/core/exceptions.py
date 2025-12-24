@@ -10,7 +10,7 @@ from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from .logging import log
+from .logging import api_log as log
 
 # Словарь для маппинга статус-кодов в семантически верные типы ошибок
 STATUS_CODE_TO_ERROR_TYPE = {

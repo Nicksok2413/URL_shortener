@@ -17,7 +17,7 @@ from src.api.core.config import settings
 from src.api.core.database import db
 from src.api.core.dependencies import DBSession
 from src.api.core.exceptions import setup_exception_handlers
-from src.api.core.logging import log
+from src.api.core.logging import api_log as log
 from src.api.routes import api_router
 
 

@@ -1,6 +1,6 @@
 import asyncio
+import logging
 from os import getenv
-from logging.config import fileConfig
 from urllib.parse import quote_plus
 
 from alembic import context
@@ -14,14 +14,47 @@ from src.api.models import Base
 # Импортируем все модели, чтобы они зарегистрировались в Base.metadata
 import src.api.models
 
+from src.core_shared.logging_setup import setup_logger
+
+# Настройка логирования
+
+# Получаем базовый логгер Loguru
+loguru_logger = setup_logger("Alembic")
+
+
+class InterceptHandler(logging.Handler):
+    """Перехватывает логи стандартного модуля logging и перенаправляет их в Loguru."""
+
+    # Получаем соответствующий уровень логгера Loguru
+    def emit(self, record):
+        try:
+            level = loguru_logger.level(record.levelname).name
+        except ValueError:
+            level = record.levelno
+
+        # Ищем, откуда был вызван лог, чтобы правильно отобразить stack trace
+        frame, depth = logging.currentframe(), 2
+
+        while frame and frame.f_code.co_filename == logging.__file__:
+            frame = frame.f_back
+            depth += 1
+
+        logger_opt = loguru_logger.bind(service_name="Alembic").opt(depth=depth, exception=record.exc_info)
+        logger_opt.log(level, record.getMessage())
+
+
+# Подменяем logging
+logging.basicConfig(handlers=[InterceptHandler()], level=logging.INFO, force=True)
+
+# Отключаем лишний шум
+logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
+
+# Логгер для использования внутри этого файла
+logger = loguru_logger.bind(service_name="Alembic")
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
-
-# Interpret the config file for Python logging.
-# This line sets up loggers basically.
-if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
 
 # Указываем Alembic на метаданные базовой модели
 target_metadata = Base.metadata
@@ -62,7 +95,7 @@ if not current_db_url:
     try:
         current_db_url = get_database_url()
     except ValueError as db_url_exc:
-        # log.error(f"Ошибка конфигурации: {db_url_exc}")
+        logger.error(f"Ошибка конфигурации: {db_url_exc}")
         raise db_url_exc
 
 

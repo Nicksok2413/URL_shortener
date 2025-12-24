@@ -75,6 +75,9 @@ RUN groupadd -g 1000 appgroup && \
 COPY --from=builder /usr/local/bin/su-exec /usr/local/bin/su-exec
 COPY --from=builder /app/.venv /app/.venv
 
+# Общий код ядра
+COPY --chown=appuser:appgroup ./src/core_shared ./src/core_shared
+
 # ==================================================================================
 # 3. "api": Финальный образ для API
 # ==================================================================================

@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.core.database import db
 from src.api.core.exceptions import ConflictException, NotFoundException
-from src.api.core.logging import log
+from src.api.core.logging import api_log as log
 from src.api.models import UrlLink
 from src.api.repositories import UrlLinkRepository
 from src.api.utils import generate_short_code

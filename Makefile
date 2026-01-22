@@ -43,9 +43,14 @@ install:
 # Управление Docker окружением
 # ------------------------------------------------------------------------------
 up:
+	@echo "-> Запуск контейнеров..."
 	docker compose up -d
-
+	@echo "-> Применение миграций..."
+	docker compose run --rm api-migrate
+	@echo "-> Проект успешно запущен!"
+	
 down:
+	@echo "-> Остановка контейнеров..."
 	docker compose down
 
 rebuild: down

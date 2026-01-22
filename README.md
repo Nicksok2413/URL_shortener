@@ -90,12 +90,9 @@ cp .env.example .env
 make up
 ```
 
-*Или классическим способом: 
+Или классическим способом: 
    `docker compose up -d --build`
    `docker compose run --rm api-migrate`
-*
-
-
 
 ### 3. Применение миграций
 Если таблицы не создались автоматически или вы добавили новые модели:
@@ -103,11 +100,11 @@ make up
 make migrate
 ```
 
-*Или классическим способом: `docker compose run --rm api-migrate`*
+Или классическим способом: `docker compose run --rm api-migrate`
 
 ### 4. Доступ
-После запуска API будет доступно по адресу: [http://localhost:8000](http://localhost:8000)
-Документация Swagger UI доступна по адресу: [http://localhost:8000/docs](http://localhost:8000/docs)
+* После запуска API будет доступно по адресу: [http://localhost:8000](http://localhost:8000)
+* Документация Swagger UI доступна по адресу: [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ---
 
